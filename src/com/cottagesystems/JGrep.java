@@ -27,6 +27,30 @@ public class JGrep {
         System.err.println("\"hello jeremy\" | jgrep \"hello (.*)\" --format=\\$1");
     }
     
+    private static String doSubString( String text, String spec ) {
+        Pattern p= Pattern.compile("(-?\\d*)\\:(-?\\d*)");
+        Matcher m= p.matcher(spec);
+        if ( !m.matches() ) {
+            throw new IllegalArgumentException("subString spec must be like $1[4:5]");
+        } else {
+            int start,stop;
+            if ( m.group(1).length()>0 ) {
+                start= Integer.parseInt(m.group(1));
+            } else {
+                start= 0;
+            }
+            if ( m.group(2).length()>0 ) {
+                stop= Integer.parseInt(m.group(2));
+            } else {
+                stop= text.length();
+            }
+            if ( start<0 ) start= text.length() + start;
+            if ( stop<0 ) stop= text.length() + stop;
+            
+            return text.substring(start,stop);
+        }
+    }
+    
     public static void main( String[] args ) throws IOException {
         try (PrintStream out= System.out ) {
 
@@ -72,9 +96,26 @@ public class JGrep {
                     if ( format.equals("$0") ) {
                         outline= line;
                     } else {
-                        for ( int i=0; i<=m.groupCount(); i++ ) {
-                            outline= outline.replaceAll("\\$"+i, m.group(i) );
+                        String[] ss= outline.split("\\$");
+                        StringBuilder outline2= new StringBuilder();
+                        outline2.append(ss[0]);
+                        for ( int i=1; i<ss.length; i++ ) {
+                            int digit= Integer.parseInt(ss[i].substring(0,1));
+                            if ( ss[i].length()>1 && Character.isDigit(ss[i].charAt(1)) ) {
+                                throw new IllegalArgumentException("only 9 fields allowed");
+                            }
+                            if ( ss[i].length()>1 && ss[i].charAt(1)=='[' ) {
+                                int i2= ss[i].indexOf(']');
+                                String subString= ss[i].substring(2,i2);
+                                String insert= doSubString( m.group(digit), subString );
+                                outline2.append( insert );
+                                outline2.append( ss[i].substring(i2+1) );
+                            } else {
+                                outline2.append( m.group(digit) );
+                                outline2.append( ss[i].substring(1) );
+                            }
                         }
+                        outline= outline2.toString();
                     }
                     out.println(outline);
                 }
