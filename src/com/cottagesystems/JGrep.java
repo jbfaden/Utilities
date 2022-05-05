@@ -21,7 +21,7 @@ public class JGrep {
     private static void printusage() {
         System.err.println("jgrep <regex> <format> [file]");
         System.err.println("  <regex> regular expression like '.*\\-(.*).eml' ");
-        System.err.println("  <format> format where matched groups are inserted.  $0 is default, or like $1");
+        System.err.println("  <format> format where matched groups are inserted.  $0 is default, or like $1 or $1[1:-4]");
         System.err.println("  [file] stdin is the default, or a file.");
         System.err.println("examples:");
         System.err.println("\"hello jeremy\" | jgrep \"hello (.*)\" --format=\\$1");
