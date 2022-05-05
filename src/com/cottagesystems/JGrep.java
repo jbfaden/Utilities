@@ -23,6 +23,12 @@ public class JGrep {
         System.err.println("  <regex> regular expression like '.*\\-(.*).eml' ");
         System.err.println("  <format> format where matched groups are inserted.  $0 is default, or like $1 or $1[1:-4]");
         System.err.println("  [file] stdin is the default, or a file.");
+        System.err.println("format");
+        System.err.println("  $0 is replaced by the entire match.");
+        System.err.println("  $1 is replaced by the first group.");
+        System.err.println("  ${MATCHNUM} is replaced by the number of matches in the file.");
+        System.err.println("  ${LINENUM} is replaced by the line number within the file.");
+        System.err.println("  ${NEWLINE} is replaced by a new line.");
         System.err.println("examples:");
         System.err.println("\"hello jeremy\" | jgrep \"hello (.*)\" --format=\\$1");
     }
@@ -89,9 +95,12 @@ public class JGrep {
             }
             
             String line = in.readLine();
+            int linenum = 1;
+            int matchnum = 0;
             while ( line!=null ) {
                 Matcher m= p.matcher(line);
                 if ( m.matches() ) {
+                    matchnum++;
                     String outline= format;
                     if ( format.equals("$0") ) {
                         outline= line;
@@ -100,19 +109,35 @@ public class JGrep {
                         StringBuilder outline2= new StringBuilder();
                         outline2.append(ss[0]);
                         for ( int i=1; i<ss.length; i++ ) {
-                            int digit= Integer.parseInt(ss[i].substring(0,1));
-                            if ( ss[i].length()>1 && Character.isDigit(ss[i].charAt(1)) ) {
-                                throw new IllegalArgumentException("only 9 fields allowed");
-                            }
-                            if ( ss[i].length()>1 && ss[i].charAt(1)=='[' ) {
-                                int i2= ss[i].indexOf(']');
-                                String subString= ss[i].substring(2,i2);
-                                String insert= doSubString( m.group(digit), subString );
-                                outline2.append( insert );
-                                outline2.append( ss[i].substring(i2+1) );
-                            } else {
-                                outline2.append( m.group(digit) );
-                                outline2.append( ss[i].substring(1) );
+                            String field= ss[i];
+                            if ( Character.isDigit(field.charAt(0)) ) {
+                                int digit= Integer.parseInt(field.substring(0,1));
+                                if ( field.length()>1 && Character.isDigit(field.charAt(1)) ) {
+                                    throw new IllegalArgumentException("only 9 fields allowed");
+                                }
+                                if ( field.length()>1 && field.charAt(1)=='[' ) {
+                                    int i2= field.indexOf(']');
+                                    String subString= field.substring(2,i2);
+                                    String insert= doSubString( m.group(digit), subString );
+                                    outline2.append( insert );
+                                    outline2.append( field.substring(i2+1) );
+                                } else {
+                                    outline2.append( m.group(digit) );
+                                    outline2.append( field.substring(1) );
+                                }
+                            } else if ( field.startsWith("{") ) {
+                                int i2= field.indexOf('}');
+                                String var= field.substring(1,i2);
+                                if ( var.equals("LINENUM") ) {
+                                    outline2.append( linenum );
+                                } else if ( var.equals("MATCHNUM") ) {
+                                    outline2.append( matchnum );
+                                } else if ( var.equals("NEWLINE") ) {
+                                    outline2.append( "\n" );
+                                } else {
+                                    throw new IllegalArgumentException("LINENUM or MATCHNUM or NEWLINE");
+                                }
+                                outline2.append( field.substring(i2+1) );
                             }
                         }
                         outline= outline2.toString();
@@ -120,6 +145,7 @@ public class JGrep {
                     out.println(outline);
                 }
                 line = in.readLine();
+                linenum++;
             }
 
         }
