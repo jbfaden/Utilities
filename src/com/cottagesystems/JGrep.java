@@ -30,7 +30,7 @@ public class JGrep {
         System.err.println("  ${LINENUM} is replaced by the line number within the file.");
         System.err.println("  ${NEWLINE} is replaced by a new line.");
         System.err.println("examples:");
-        System.err.println("\"hello jeremy\" | jgrep \"hello (.*)\" --format=\\$1");
+        System.err.println("  echo \"hello jeremy\" | jgrep \"hello (.*)\" --format=\\$1");
     }
     
     private static String doSubString( String text, String spec ) {
