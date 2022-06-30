@@ -31,6 +31,9 @@ public class JGrep {
         System.err.println("  ${NEWLINE} is replaced by a new line.");
         System.err.println("examples:");
         System.err.println("  echo \"hello jeremy\" | jgrep \"hello (.*)\" --format=\\$1");
+        System.err.println("");
+        System.err.println("https://github.com/jbfaden/Utilities/blob/main/src/com/cottagesystems/JGrep.java");
+        
     }
     
     private static String doSubString( String text, String spec ) {
